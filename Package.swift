@@ -23,7 +23,8 @@ let package = Package(
         ),
         .testTarget(
             name: "Unicorp.GPXReaderTests",
-            dependencies: ["Unicorp.GPXReader"]
+            dependencies: ["Unicorp.GPXReader"],
+            resources: [.process("Resources")]
         )
     ]
 )
