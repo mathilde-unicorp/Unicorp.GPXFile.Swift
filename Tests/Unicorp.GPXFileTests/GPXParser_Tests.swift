@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import Unicorp_GPXReader
+import Unicorp_GPXFile
 
 final class GPXParser_Tests: XCTestCase {
 

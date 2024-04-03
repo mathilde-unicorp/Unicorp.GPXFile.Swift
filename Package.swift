@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Unicorp.GPXReader",
+    name: "Unicorp.GPXFile",
     platforms: [
         .iOS("17.0"),
         .macOS("13.0")
@@ -12,18 +12,18 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Unicorp.GPXReader",
-            targets: ["Unicorp.GPXReader"]),
+            name: "Unicorp.GPXFile",
+            targets: ["Unicorp.GPXFile"]),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Unicorp.GPXReader"
+            name: "Unicorp.GPXFile"
         ),
         .testTarget(
-            name: "Unicorp.GPXReaderTests",
-            dependencies: ["Unicorp.GPXReader"],
+            name: "Unicorp.GPXFileTests",
+            dependencies: ["Unicorp.GPXFile"],
             resources: [.process("Resources")]
         )
     ]

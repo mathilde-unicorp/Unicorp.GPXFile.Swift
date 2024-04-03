@@ -1,7 +1,7 @@
 import XCTest
-@testable import Unicorp_GPXReader
+@testable import Unicorp_GPXFile
 
-final class Unicorp_GPXReaderTests: XCTestCase {
+final class Unicorp_GPXFileTests: XCTestCase {
     func testExample() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest
