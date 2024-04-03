@@ -8,15 +8,18 @@
 import Foundation
 import MapKit
 
+enum GPXParserError: Error {
+    case invalidUrl
+}
+
 public class GPXParser: NSObject {
     // will be assigned in the init together with the data from the gpx file
-    var xmlParser: XMLParser?
+    private var xmlParser: XMLParser?
+
     // temp variable to store the chars fired by the parser
-    var xmlText: String = ""
+    private var xmlText: String = ""
     // instantiating an empty data model
-    var gpxData: GPXData = GPXData()
-    // need this to create a temp waypoint
-    var currentWaypoint: Waypoint?
+    private var gpxData: GPXData = GPXData()
 
     // -------------------------------------------------------------------------
     // MARK: - Parse Method
@@ -24,15 +27,20 @@ public class GPXParser: NSObject {
 
     //This is not a delegate function. We call it from outside to get our gpxData parsed
     // We init with a gpx file in our bundle in this case but it could be on the web as well
-    public func parse(gpxFileURL: URL) -> GPXData? {
+    public func parse(gpxFileURL: URL) throws -> GPXData? {
         guard let data = try? Data(contentsOf: gpxFileURL) else {
             print("Cannot get data from file \(gpxFileURL)")
-            return nil
+            throw GPXParserError.invalidUrl
         }
 
+        return parse(data: data)
+    }
+
+    public func parse(data: Data) -> GPXData {
         xmlParser = XMLParser(data: data)
         xmlParser?.delegate = self
         xmlParser?.parse()
+
         return gpxData
     }
 }
@@ -50,29 +58,22 @@ extension GPXParser: XMLParserDelegate {
         // reset temp text to be empty
         xmlText = ""
 
+        print("-----------------------------------")
+        print(attributeDict)
+        
+        guard let key = GPXData.GPXKeys(rawValue: elementName) else { return }
+
         // in this method we will only look at two elements and get their coordinates
-        switch elementName {
-        case "trkpt":
+        switch key {
+        case .trackpoint:
             // from the XMLParser we get strings
-            guard let latString = attributeDict["lat"],
-                  let lonString = attributeDict["lon"] else { return }
-
-            guard let lat = Double(latString), let lon = Double(lonString) else { return }
-
-            gpxData.route.append(CLLocationCoordinate2D(latitude: lat, longitude: lon))
-
-            // the waypoints will start with wpt. Here we get the coord
-        case "wpt":
-            // here we are always at the begin of a new waypoint data so reset
-            currentWaypoint = nil
-            // again we get the strings
-            guard let latString = attributeDict["lat"],
-                  let lonString = attributeDict["lon"] else { return }
-            // we convert to double
-            guard let lat = Double(latString), let lon = Double(lonString) else { return }
-            // I will append it when I get the name in the other parser delegate
-            currentWaypoint = Waypoint(coord: CLLocationCoordinate2D(latitude: lat, longitude: lon))
-
+            if let trackpoint = GPXData.Trackpoint(attributes: attributeDict) {
+                gpxData.trackpoints.append(trackpoint)
+            }
+        case .waypoint:
+            if let waypoint = GPXData.Waypoint(attributes: attributeDict) {
+                gpxData.waypoints.append(waypoint)
+            }
         default:
             return
         }
@@ -87,15 +88,18 @@ extension GPXParser: XMLParserDelegate {
                 namespaceURI: String?,
                 qualifiedName qName: String?) {
         let cleanXmlText = xmlText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let key = GPXData.GPXKeys(rawValue: elementName) else { return }
+        
         // these are from the XML header
-        switch elementName {
-        case "author":
+        switch key {
+        case .author:
             gpxData.author = cleanXmlText
-        case "url":
+        case .url:
             gpxData.url = cleanXmlText
-        case "time":
+        case .time:
             gpxData.time = ISO8601DateFormatter().date(from: cleanXmlText)
-        case "name":
+        case .name:
             gpxData.name = cleanXmlText
         default: break
         }
